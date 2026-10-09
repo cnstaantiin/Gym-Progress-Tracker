@@ -8,7 +8,6 @@
   <meta name="apple-mobile-web-app-title" content="Gym Log">
   <title>Gym Log</title>
   
-  <!-- Minimalistisches SVG-App-Icon für iOS -->
   <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23000'/%3E%3Ctext x='90' y='110' fill='%23fff' font-family='-apple-system, sans-serif' font-size='70' font-weight='700' text-anchor='middle'%3EGL%3C/text%3E%3C/svg%3E">
 
   <style>
@@ -62,22 +61,23 @@
       font-size: 10px;
     }
 
-    /* Formular */
     .form-box {
       border: 1px solid var(--border);
       background: var(--card-bg);
       padding: 10px;
       margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
     .form-grid {
       display: grid;
-      grid-template-columns: 1fr 80px;
+      grid-template-columns: 1fr 85px;
       gap: 6px;
-      margin-bottom: 6px;
     }
 
-    input, select {
+    input {
       background: #000;
       border: 1px solid var(--border);
       color: var(--text);
@@ -89,30 +89,14 @@
       width: 100%;
     }
 
-    input:focus, select:focus {
+    input:focus {
       border-color: var(--text-dim);
     }
 
-    .btn-main {
-      width: 100%;
-      background: var(--accent);
-      color: #000;
-      border: none;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      font-weight: 700;
+    .tag-picker-label {
+      font-size: 9px;
+      color: var(--text-dim);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 7px;
-      cursor: pointer;
-    }
-
-    /* Filter & Suche */
-    .filter-section {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 14px;
     }
 
     .tag-chips {
@@ -130,16 +114,38 @@
       padding: 3px 6px;
       cursor: pointer;
       text-transform: uppercase;
+      user-select: none;
     }
 
-    .chip.active {
+    .chip.selected, .chip.active {
       background: var(--text);
       color: #000;
       border-color: var(--text);
       font-weight: 600;
     }
 
-    /* Übungsliste */
+    .btn-main {
+      width: 100%;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px;
+      cursor: pointer;
+      margin-top: 2px;
+    }
+
+    .filter-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
     .list {
       display: flex;
       flex-direction: column;
@@ -158,17 +164,26 @@
     .item-top {
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
+      align-items: flex-start;
+      gap: 8px;
     }
 
     .item-name {
       font-size: 12px;
       font-weight: 600;
       color: var(--accent);
+      word-break: break-word;
+    }
+
+    .item-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      justify-content: flex-end;
     }
 
     .item-tag {
-      font-size: 9px;
+      font-size: 8px;
       color: var(--text-dim);
       border: 1px solid var(--border);
       padding: 1px 4px;
@@ -188,9 +203,9 @@
     }
 
     .weight-input {
-      width: 60px;
+      width: 65px;
       text-align: right;
-      padding: 3px 4px;
+      padding: 4px;
       font-size: 11px;
     }
 
@@ -199,20 +214,10 @@
       font-size: 10px;
     }
 
-    .btn-save-weight {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 9px;
-      padding: 3px 6px;
-      cursor: pointer;
-    }
-
     .meta {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     .timestamp {
@@ -225,7 +230,8 @@
       border: none;
       color: #555;
       font-family: var(--font-mono);
-      font-size: 11px;
+      font-size: 13px;
+      line-height: 1;
       cursor: pointer;
       padding: 0 4px;
     }
@@ -255,34 +261,22 @@
       <input type="text" id="new-name" placeholder="Übung (z.B. Bankdrücken)" autocomplete="off">
       <input type="number" id="new-weight" placeholder="kg" step="0.5" min="0">
     </div>
-    <div class="form-grid">
-      <select id="new-tag">
-        <option value="Push">Push</option>
-        <option value="Pull">Pull</option>
-        <option value="Torso">Torso</option>
-        <option value="Limp">Limp</option>
-        <option value="Shoulder">Shoulder</option>
-        <option value="Chest">Chest</option>
-        <option value="Back">Back</option>
-        <option value="Legs">Legs</option>
-      </select>
-      <button class="btn-main" onclick="addExercise()">+ Add</button>
+    
+    <div>
+      <div class="tag-picker-label" style="margin-bottom: 4px;">Tags wählen (Mehrfachauswahl):</div>
+      <div class="tag-chips" id="creation-tag-chips">
+        <!-- per JS gerendert -->
+      </div>
     </div>
+
+    <button class="btn-main" onclick="addExercise()">+ Übung Speichern</button>
   </div>
 
   <!-- Suche & Tag-Filter -->
   <div class="filter-section">
-    <input type="text" id="search-input" placeholder="Suchen..." oninput="renderExercises()" autocomplete="off">
+    <input type="text" id="search-input" placeholder="Suchen nach Name oder Tag..." oninput="renderExercises()" autocomplete="off">
     <div class="tag-chips" id="filter-chips">
-      <button class="chip active" data-tag="ALL" onclick="selectFilter('ALL')">Alle</button>
-      <button class="chip" data-tag="Push" onclick="selectFilter('Push')">Push</button>
-      <button class="chip" data-tag="Pull" onclick="selectFilter('Pull')">Pull</button>
-      <button class="chip" data-tag="Torso" onclick="selectFilter('Torso')">Torso</button>
-      <button class="chip" data-tag="Limp" onclick="selectFilter('Limp')">Limp</button>
-      <button class="chip" data-tag="Shoulder" onclick="selectFilter('Shoulder')">Shoulder</button>
-      <button class="chip" data-tag="Chest" onclick="selectFilter('Chest')">Chest</button>
-      <button class="chip" data-tag="Back" onclick="selectFilter('Back')">Back</button>
-      <button class="chip" data-tag="Legs" onclick="selectFilter('Legs')">Legs</button>
+      <!-- per JS gerendert -->
     </div>
   </div>
 
@@ -290,20 +284,29 @@
   <div class="list" id="exercise-list"></div>
 
   <script>
-    const STORAGE_KEY = "gym_log_data_v1";
-    let activeTagFilter = "ALL";
+    const STORAGE_KEY = "gym_log_data_v2";
+    const AVAILABLE_TAGS = ["Push", "Pull", "Torso", "Limp", "Shoulder", "Chest", "Back", "Legs"];
+    
+    let selectedCreationTags = [];
+    let activeFilterTag = "ALL";
 
     function loadData() {
       try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("gym_log_data_v1");
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        // Migration von alten Einzel-Tags zu Array falls v1 vorhanden war
+        return parsed.map(item => ({
+          ...item,
+          tags: Array.isArray(item.tags) ? item.tags : (item.tag ? [item.tag] : [])
+        }));
       } catch (e) {
         return [];
       }
     }
 
-    function saveData(data) {
+    function saveDataDirectly(data) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      renderExercises();
     }
 
     function formatDate(isoString) {
@@ -315,10 +318,35 @@
       return `${day}.${mon}.${yr}`;
     }
 
+    function initTagButtons() {
+      // Tags für Erstellung rendern
+      const createContainer = document.getElementById("creation-tag-chips");
+      createContainer.innerHTML = AVAILABLE_TAGS.map(t => 
+        `<button type="button" class="chip" onclick="toggleCreationTag('${t}', this)">${t}</button>`
+      ).join("");
+
+      // Filter-Tags rendern
+      const filterContainer = document.getElementById("filter-chips");
+      filterContainer.innerHTML = [
+        `<button class="chip active" data-tag="ALL" onclick="selectFilter('ALL')">Alle</button>`,
+        ...AVAILABLE_TAGS.map(t => `<button class="chip" data-tag="${t}" onclick="selectFilter('${t}')">${t}</button>`)
+      ].join("");
+    }
+
+    function toggleCreationTag(tag, btn) {
+      const idx = selectedCreationTags.indexOf(tag);
+      if (idx > -1) {
+        selectedCreationTags.splice(idx, 1);
+        btn.classList.remove("selected");
+      } else {
+        selectedCreationTags.push(tag);
+        btn.classList.add("selected");
+      }
+    }
+
     function addExercise() {
       const nameInput = document.getElementById("new-name");
       const weightInput = document.getElementById("new-weight");
-      const tagInput = document.getElementById("new-tag");
 
       const name = nameInput.value.trim();
       const weight = parseFloat(weightInput.value);
@@ -333,39 +361,49 @@
         id: "ex_" + Date.now(),
         name: name,
         weight: isNaN(weight) ? 0 : weight,
-        tag: tagInput.value,
+        tags: [...selectedCreationTags],
         updatedAt: new Date().toISOString()
       });
 
-      saveData(exercises);
+      saveDataDirectly(exercises);
+
+      // Reset Formular
       nameInput.value = "";
       weightInput.value = "";
+      selectedCreationTags = [];
+      document.querySelectorAll("#creation-tag-chips .chip").forEach(c => c.classList.remove("selected"));
+
+      renderExercises();
     }
 
-    function updateWeight(id) {
-      const inputEl = document.getElementById(`weight_${id}`);
+    // Sofortiges Speichern beim Tippen / Verlassen des Gewichtsfeldes
+    function handleWeightInput(id, inputEl) {
       const newWeight = parseFloat(inputEl.value);
-
       if (isNaN(newWeight)) return;
 
       const exercises = loadData();
       const item = exercises.find(e => e.id === id);
-      if (item) {
+      if (item && item.weight !== newWeight) {
         item.weight = newWeight;
         item.updatedAt = new Date().toISOString();
-        saveData(exercises);
+        saveDataDirectly(exercises);
+
+        // Aktualisiere das angezeigte Datum live ohne Neurendern der Liste
+        const timeEl = document.getElementById(`time_${id}`);
+        if (timeEl) timeEl.textContent = formatDate(item.updatedAt);
       }
     }
 
     function deleteExercise(id) {
       if (!confirm("Übung wirklich löschen?")) return;
       const exercises = loadData().filter(e => e.id !== id);
-      saveData(exercises);
+      saveDataDirectly(exercises);
+      renderExercises();
     }
 
     function selectFilter(tag) {
-      activeTagFilter = tag;
-      document.querySelectorAll(".chip").forEach(el => {
+      activeFilterTag = tag;
+      document.querySelectorAll("#filter-chips .chip").forEach(el => {
         el.classList.toggle("active", el.dataset.tag === tag);
       });
       renderExercises();
@@ -378,8 +416,9 @@
       const exercises = loadData();
 
       const filtered = exercises.filter(item => {
-        const matchesTag = activeTagFilter === "ALL" || item.tag === activeTagFilter;
-        const matchesSearch = item.name.toLowerCase().includes(searchQuery) || item.tag.toLowerCase().includes(searchQuery);
+        const matchesTag = activeFilterTag === "ALL" || (item.tags && item.tags.includes(activeFilterTag));
+        const tagsString = (item.tags || []).join(" ").toLowerCase();
+        const matchesSearch = item.name.toLowerCase().includes(searchQuery) || tagsString.includes(searchQuery);
         return matchesTag && matchesSearch;
       });
 
@@ -394,16 +433,25 @@
         <div class="item">
           <div class="item-top">
             <span class="item-name">${escapeHtml(item.name)}</span>
-            <span class="item-tag">${escapeHtml(item.tag)}</span>
+            <div class="item-tags">
+              ${(item.tags || []).map(t => `<span class="item-tag">${escapeHtml(t)}</span>`).join("")}
+            </div>
           </div>
           <div class="item-bottom">
             <div class="weight-control">
-              <input type="number" id="weight_${item.id}" class="weight-input" value="${item.weight}" step="0.5" min="0">
+              <input 
+                type="number" 
+                class="weight-input" 
+                value="${item.weight}" 
+                step="0.5" 
+                min="0"
+                oninput="handleWeightInput('${item.id}', this)"
+                onchange="handleWeightInput('${item.id}', this)"
+              >
               <span class="unit">kg</span>
-              <button class="btn-save-weight" onclick="updateWeight('${item.id}')">OK</button>
             </div>
             <div class="meta">
-              <span class="timestamp">${formatDate(item.updatedAt)}</span>
+              <span class="timestamp" id="time_${item.id}">${formatDate(item.updatedAt)}</span>
               <button class="btn-del" onclick="deleteExercise('${item.id}')" title="Löschen">×</button>
             </div>
           </div>
@@ -415,7 +463,7 @@
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
 
-    // Initiale Anzeige
+    initTagButtons();
     renderExercises();
   </script>
 </body>
