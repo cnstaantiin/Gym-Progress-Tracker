@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Gym Log">
+  <title>Gym Log</title>
+  
+  <!-- Minimalistisches SVG-App-Icon für iOS -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23000'/%3E%3Ctext x='90' y='110' fill='%23fff' font-family='-apple-system, sans-serif' font-size='70' font-weight='700' text-anchor='middle'%3EGL%3C/text%3E%3C/svg%3E">
+
+  <style>
+    :root {
+      --bg: #000000;
+      --card-bg: #0d0d0d;
+      --border: #222222;
+      --text: #e0e0e0;
+      --text-dim: #777777;
+      --accent: #ffffff;
+      --font-mono: -apple-system-ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.4;
+      padding: env(safe-area-inset-top, 20px) 14px calc(env(safe-area-inset-bottom, 20px) + 20px) 14px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 12px 0 16px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .count {
+      color: var(--text-dim);
+      font-size: 10px;
+    }
+
+    /* Formular */
+    .form-box {
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      padding: 10px;
+      margin-bottom: 14px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 80px;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      background: #000;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 6px 8px;
+      border-radius: 0;
+      outline: none;
+      width: 100%;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--text-dim);
+    }
+
+    .btn-main {
+      width: 100%;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 7px;
+      cursor: pointer;
+    }
+
+    /* Filter & Suche */
+    .filter-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .tag-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .chip {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      padding: 3px 6px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .chip.active {
+      background: var(--text);
+      color: #000;
+      border-color: var(--text);
+      font-weight: 600;
+    }
+
+    /* Übungsliste */
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .item {
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .item-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .item-tag {
+      font-size: 9px;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      padding: 1px 4px;
+      text-transform: uppercase;
+    }
+
+    .item-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .weight-control {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .weight-input {
+      width: 60px;
+      text-align: right;
+      padding: 3px 4px;
+      font-size: 11px;
+    }
+
+    .unit {
+      color: var(--text-dim);
+      font-size: 10px;
+    }
+
+    .btn-save-weight {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      padding: 3px 6px;
+      cursor: pointer;
+    }
+
+    .meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .timestamp {
+      color: var(--text-dim);
+      font-size: 9px;
+    }
+
+    .btn-del {
+      background: transparent;
+      border: none;
+      color: #555;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+
+    .btn-del:active {
+      color: #fff;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--text-dim);
+      padding: 24px 0;
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Gym Log</h1>
+    <div id="exercise-count" class="count">0 Übungen</div>
+  </header>
+
+  <!-- Neue Übung anlegen -->
+  <div class="form-box">
+    <div class="form-grid">
+      <input type="text" id="new-name" placeholder="Übung (z.B. Bankdrücken)" autocomplete="off">
+      <input type="number" id="new-weight" placeholder="kg" step="0.5" min="0">
+    </div>
+    <div class="form-grid">
+      <select id="new-tag">
+        <option value="Push">Push</option>
+        <option value="Pull">Pull</option>
+        <option value="Torso">Torso</option>
+        <option value="Limp">Limp</option>
+        <option value="Shoulder">Shoulder</option>
+        <option value="Chest">Chest</option>
+        <option value="Back">Back</option>
+        <option value="Legs">Legs</option>
+      </select>
+      <button class="btn-main" onclick="addExercise()">+ Add</button>
+    </div>
+  </div>
+
+  <!-- Suche & Tag-Filter -->
+  <div class="filter-section">
+    <input type="text" id="search-input" placeholder="Suchen..." oninput="renderExercises()" autocomplete="off">
+    <div class="tag-chips" id="filter-chips">
+      <button class="chip active" data-tag="ALL" onclick="selectFilter('ALL')">Alle</button>
+      <button class="chip" data-tag="Push" onclick="selectFilter('Push')">Push</button>
+      <button class="chip" data-tag="Pull" onclick="selectFilter('Pull')">Pull</button>
+      <button class="chip" data-tag="Torso" onclick="selectFilter('Torso')">Torso</button>
+      <button class="chip" data-tag="Limp" onclick="selectFilter('Limp')">Limp</button>
+      <button class="chip" data-tag="Shoulder" onclick="selectFilter('Shoulder')">Shoulder</button>
+      <button class="chip" data-tag="Chest" onclick="selectFilter('Chest')">Chest</button>
+      <button class="chip" data-tag="Back" onclick="selectFilter('Back')">Back</button>
+      <button class="chip" data-tag="Legs" onclick="selectFilter('Legs')">Legs</button>
+    </div>
+  </div>
+
+  <!-- Liste -->
+  <div class="list" id="exercise-list"></div>
+
+  <script>
+    const STORAGE_KEY = "gym_log_data_v1";
+    let activeTagFilter = "ALL";
+
+    function loadData() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      renderExercises();
+    }
+
+    function formatDate(isoString) {
+      if (!isoString) return "--";
+      const d = new Date(isoString);
+      const day = String(d.getDate()).padStart(2, '0');
+      const mon = String(d.getMonth() + 1).padStart(2, '0');
+      const yr = String(d.getFullYear()).slice(-2);
+      return `${day}.${mon}.${yr}`;
+    }
+
+    function addExercise() {
+      const nameInput = document.getElementById("new-name");
+      const weightInput = document.getElementById("new-weight");
+      const tagInput = document.getElementById("new-tag");
+
+      const name = nameInput.value.trim();
+      const weight = parseFloat(weightInput.value);
+
+      if (!name) {
+        alert("Bitte Namen eingeben.");
+        return;
+      }
+
+      const exercises = loadData();
+      exercises.unshift({
+        id: "ex_" + Date.now(),
+        name: name,
+        weight: isNaN(weight) ? 0 : weight,
+        tag: tagInput.value,
+        updatedAt: new Date().toISOString()
+      });
+
+      saveData(exercises);
+      nameInput.value = "";
+      weightInput.value = "";
+    }
+
+    function updateWeight(id) {
+      const inputEl = document.getElementById(`weight_${id}`);
+      const newWeight = parseFloat(inputEl.value);
+
+      if (isNaN(newWeight)) return;
+
+      const exercises = loadData();
+      const item = exercises.find(e => e.id === id);
+      if (item) {
+        item.weight = newWeight;
+        item.updatedAt = new Date().toISOString();
+        saveData(exercises);
+      }
+    }
+
+    function deleteExercise(id) {
+      if (!confirm("Übung wirklich löschen?")) return;
+      const exercises = loadData().filter(e => e.id !== id);
+      saveData(exercises);
+    }
+
+    function selectFilter(tag) {
+      activeTagFilter = tag;
+      document.querySelectorAll(".chip").forEach(el => {
+        el.classList.toggle("active", el.dataset.tag === tag);
+      });
+      renderExercises();
+    }
+
+    function renderExercises() {
+      const listEl = document.getElementById("exercise-list");
+      const countEl = document.getElementById("exercise-count");
+      const searchQuery = document.getElementById("search-input").value.trim().toLowerCase();
+      const exercises = loadData();
+
+      const filtered = exercises.filter(item => {
+        const matchesTag = activeTagFilter === "ALL" || item.tag === activeTagFilter;
+        const matchesSearch = item.name.toLowerCase().includes(searchQuery) || item.tag.toLowerCase().includes(searchQuery);
+        return matchesTag && matchesSearch;
+      });
+
+      countEl.textContent = `${filtered.length} / ${exercises.length} Übungen`;
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="empty">Keine Einträge gefunden.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(item => `
+        <div class="item">
+          <div class="item-top">
+            <span class="item-name">${escapeHtml(item.name)}</span>
+            <span class="item-tag">${escapeHtml(item.tag)}</span>
+          </div>
+          <div class="item-bottom">
+            <div class="weight-control">
+              <input type="number" id="weight_${item.id}" class="weight-input" value="${item.weight}" step="0.5" min="0">
+              <span class="unit">kg</span>
+              <button class="btn-save-weight" onclick="updateWeight('${item.id}')">OK</button>
+            </div>
+            <div class="meta">
+              <span class="timestamp">${formatDate(item.updatedAt)}</span>
+              <button class="btn-del" onclick="deleteExercise('${item.id}')" title="Löschen">×</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    // Initiale Anzeige
+    renderExercises();
+  </script>
+</body>
+</html>
