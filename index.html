@@ -1,3 +1,12 @@
+Hier ist der aktualisierte Code mit interaktiven **Wiederholungs-Buttons (5, 6, 7, 8, 9, 10+)**:
+
+* Jede Übung hat eine Button-Leiste für Wiederholungen.
+* Ein Klick markiert die Zahl sofort (weiß hinterlegt) und speichert den Wert direkt in `localStorage`.
+* Das Änderungsdatum wird dabei ebenfalls auf den aktuellen Tag gesetzt.
+
+Ersetze den Inhalt deiner `index.html` auf GitHub durch diesen Code:
+
+```html
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -93,7 +102,7 @@
       border-color: var(--text-dim);
     }
 
-    .tag-picker-label {
+    .field-label {
       font-size: 9px;
       color: var(--text-dim);
       text-transform: uppercase;
@@ -149,16 +158,16 @@
     .list {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
     .item {
       border: 1px solid var(--border);
       background: var(--card-bg);
-      padding: 8px 10px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
     .item-top {
@@ -190,7 +199,7 @@
       text-transform: uppercase;
     }
 
-    .item-bottom {
+    .item-middle {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -240,6 +249,48 @@
       color: #fff;
     }
 
+    /* Wiederholungen / Reps Buttons */
+    .reps-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-top: 4px;
+      border-top: 1px dashed #1a1a1a;
+    }
+
+    .reps-label {
+      font-size: 9px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      min-width: 32px;
+    }
+
+    .reps-buttons {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 4px;
+      flex-grow: 1;
+    }
+
+    .btn-rep {
+      background: #000;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 5px 0;
+      cursor: pointer;
+      text-align: center;
+      border-radius: 0;
+    }
+
+    .btn-rep.active {
+      background: var(--text);
+      color: #000;
+      border-color: var(--text);
+    }
+
     .empty {
       text-align: center;
       color: var(--text-dim);
@@ -263,10 +314,8 @@
     </div>
     
     <div>
-      <div class="tag-picker-label" style="margin-bottom: 4px;">Tags wählen (Mehrfachauswahl):</div>
-      <div class="tag-chips" id="creation-tag-chips">
-        <!-- per JS gerendert -->
-      </div>
+      <div class="field-label" style="margin-bottom: 4px;">Tags wählen (Mehrfachauswahl):</div>
+      <div class="tag-chips" id="creation-tag-chips"></div>
     </div>
 
     <button class="btn-main" onclick="addExercise()">+ Übung Speichern</button>
@@ -275,30 +324,29 @@
   <!-- Suche & Tag-Filter -->
   <div class="filter-section">
     <input type="text" id="search-input" placeholder="Suchen nach Name oder Tag..." oninput="renderExercises()" autocomplete="off">
-    <div class="tag-chips" id="filter-chips">
-      <!-- per JS gerendert -->
-    </div>
+    <div class="tag-chips" id="filter-chips"></div>
   </div>
 
   <!-- Liste -->
   <div class="list" id="exercise-list"></div>
 
   <script>
-    const STORAGE_KEY = "gym_log_data_v2";
+    const STORAGE_KEY = "gym_log_data_v3";
     const AVAILABLE_TAGS = ["Push", "Pull", "Torso", "Limp", "Shoulder", "Chest", "Back", "Legs"];
+    const REP_OPTIONS = ["5", "6", "7", "8", "9", "10+"];
     
     let selectedCreationTags = [];
     let activeFilterTag = "ALL";
 
     function loadData() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("gym_log_data_v1");
+        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("gym_log_data_v2") || localStorage.getItem("gym_log_data_v1");
         if (!raw) return [];
         const parsed = JSON.parse(raw);
-        // Migration von alten Einzel-Tags zu Array falls v1 vorhanden war
         return parsed.map(item => ({
           ...item,
-          tags: Array.isArray(item.tags) ? item.tags : (item.tag ? [item.tag] : [])
+          tags: Array.isArray(item.tags) ? item.tags : (item.tag ? [item.tag] : []),
+          reps: item.reps || null
         }));
       } catch (e) {
         return [];
@@ -319,13 +367,11 @@
     }
 
     function initTagButtons() {
-      // Tags für Erstellung rendern
       const createContainer = document.getElementById("creation-tag-chips");
       createContainer.innerHTML = AVAILABLE_TAGS.map(t => 
         `<button type="button" class="chip" onclick="toggleCreationTag('${t}', this)">${t}</button>`
       ).join("");
 
-      // Filter-Tags rendern
       const filterContainer = document.getElementById("filter-chips");
       filterContainer.innerHTML = [
         `<button class="chip active" data-tag="ALL" onclick="selectFilter('ALL')">Alle</button>`,
@@ -362,12 +408,12 @@
         name: name,
         weight: isNaN(weight) ? 0 : weight,
         tags: [...selectedCreationTags],
+        reps: null,
         updatedAt: new Date().toISOString()
       });
 
       saveDataDirectly(exercises);
 
-      // Reset Formular
       nameInput.value = "";
       weightInput.value = "";
       selectedCreationTags = [];
@@ -376,7 +422,6 @@
       renderExercises();
     }
 
-    // Sofortiges Speichern beim Tippen / Verlassen des Gewichtsfeldes
     function handleWeightInput(id, inputEl) {
       const newWeight = parseFloat(inputEl.value);
       if (isNaN(newWeight)) return;
@@ -388,9 +433,28 @@
         item.updatedAt = new Date().toISOString();
         saveDataDirectly(exercises);
 
-        // Aktualisiere das angezeigte Datum live ohne Neurendern der Liste
         const timeEl = document.getElementById(`time_${id}`);
         if (timeEl) timeEl.textContent = formatDate(item.updatedAt);
+      }
+    }
+
+    function setReps(id, repValue) {
+      const exercises = loadData();
+      const item = exercises.find(e => e.id === id);
+      if (!item) return;
+
+      item.reps = (item.reps === repValue) ? null : repValue;
+      item.updatedAt = new Date().toISOString();
+      saveDataDirectly(exercises);
+
+      const timeEl = document.getElementById(`time_${id}`);
+      if (timeEl) timeEl.textContent = formatDate(item.updatedAt);
+
+      const parentRow = document.getElementById(`reps_row_${id}`);
+      if (parentRow) {
+        parentRow.querySelectorAll(".btn-rep").forEach(b => {
+          b.classList.toggle("active", b.dataset.rep === item.reps);
+        });
       }
     }
 
@@ -437,7 +501,7 @@
               ${(item.tags || []).map(t => `<span class="item-tag">${escapeHtml(t)}</span>`).join("")}
             </div>
           </div>
-          <div class="item-bottom">
+          <div class="item-middle">
             <div class="weight-control">
               <input 
                 type="number" 
@@ -455,6 +519,19 @@
               <button class="btn-del" onclick="deleteExercise('${item.id}')" title="Löschen">×</button>
             </div>
           </div>
+          <div class="reps-row" id="reps_row_${item.id}">
+            <span class="reps-label">Reps:</span>
+            <div class="reps-buttons">
+              ${REP_OPTIONS.map(r => `
+                <button 
+                  type="button" 
+                  class="btn-rep ${item.reps === r ? 'active' : ''}" 
+                  data-rep="${r}" 
+                  onclick="setReps('${item.id}', '${r}')"
+                >${r}</button>
+              `).join("")}
+            </div>
+          </div>
         </div>
       `).join("");
     }
@@ -468,3 +545,5 @@
   </script>
 </body>
 </html>
+
+```
